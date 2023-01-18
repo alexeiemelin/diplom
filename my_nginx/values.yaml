@@ -1,0 +1,16 @@
+replicaCount: 1
+
+image:
+  repository: alexeiemelin/nginx
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "1.0.0"
+
+resources:
+   limits:
+     cpu: 200m
+     memory: 256Mi
+   requests:
+     cpu: 100m
+     memory: 128Mi
+
+appPort: 80
