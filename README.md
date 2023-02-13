@@ -246,7 +246,7 @@ helm template my_nginx
 
 Проверяем синтаксис:
 helm lint my_nginx
-
+ 
 Пакуем в архив наш chart:
 helm package my_nginx -d charts
 Successfully packaged chart and saved it to: charts/my_nginx-0.1.2.tgz
