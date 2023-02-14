@@ -23,9 +23,5 @@ variable "gitlab" {
 # Указываем токен аутентификации
 variable "oauth_token" {
   type = string
-  default = "AQAAAAADkvu1AATuwQtn-Rkdn0lKm8akgXqNLbM"
+  default = ""
 }
-
-#backet keys
-#   access_key = "YCAJEFC6Yrm4W7jaYDi9shG6G"
-#    secret_key = "YCNlyDXD1rLMWc2T3QIH8KU7aaTo9CZDHFZqQQf7"
