@@ -11,8 +11,8 @@ terraform {
     bucket     = "my-storage"
     region     = "ru-central1"
     key        = "[terraform.workspace]/terraform.tfstate"
-    access_key = "YCAJEzpfZSh39LMtx3ovgbdfM"
-    secret_key = "YCN8lI_sZI8zmzo_Nyg4InTDUjXjlVx9QeP_zbJ0"
+    access_key = ""
+    secret_key = ""
 
     skip_region_validation      = true
     skip_credentials_validation = true
