@@ -64,108 +64,13 @@ user@user:~/PycharmProjects/diplom$ terraform workspace list
 * stage
 ```
 
-## Работа с Docker
+Конфигурация создаваемых машин описана в файлах папки Terraform.
 
-Создаем наш docker image из Dockerfile:
+Запуск сборки делаем с помощью команды:
+
 ```bash
-docker build -t alexeiemelin/nginx:v1 .
+terraform apply
 ```
-
-И загружаем его на hub.docker:
-```bash
-docker push alexeiemelin/nginx:v1
-```
-
-https://hub.docker.com/r/alexeiemelin/nginx
-
-## Работа с helm
-
-Устанавливаем helm на пк для того, чтобы сделать наш chart:
-```bash
-curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-chmod 700 get_helm.sh
-./get_helm.sh
-```
-
-Cоздаем наш чарт:
-```bash
-helm create my_nginx
-```
-
-Удаляем лишние файлы, созданные автоматически и заменяем своими (values.yaml, Chart.yaml, deployment.yml):
-```bash
-rm -rf my_nginx/templates/*
-```
-
-Проверяем, что значения из файла values.yaml корректно подставляются: 
-```bash
-helm template my_nginx
-```
-
-Проверяем синтаксис:
-```bash
-helm lint my_nginx
-```
-
-Пакуем в архив наш chart:
-```bash
-helm package my_nginx -d charts
-Successfully packaged chart and saved it to: charts/my_nginx-0.1.2.tgz
-```
-
-Генерируем индексный файл чарта, 
-который содержит в себе перечень версий приложения, составленный на основе архива:
-c
-helm repo index charts
-```
-
-Создадим index.html файл, который будет лицевой страничкой нашего чарта:
-```html
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>my_site</title>
-</head>
-<body>
-  <h2>Welcome to my Helm repository</h2>
-  <p>Alexei Emelin</p>
-</body>
-</html>
-```
-
-Верифицируем наш репозиторий. Для этого изменим наше приложение и загрузим новую версию:
-
-Создаем наш docker image из Dockerfile:
-```bash
-docker build -t alexeiemelin/nginx:0.0.3 .
-```
-
-И загружаем его на hub.docker:
-```bash
-docker push alexeiemelin/nginx:0.0.3
-```
-
-Изменим значение версии в values.yaml и Chart.yaml
-
-Перезальем наш chart:
-```bash
-helm package my_nginx -d charts
-Successfully packaged chart and saved it to: charts/my_nginx-0.0.2.tgz
-```
-
-Добавляем на control node репозиторий helm и устанавливаем chart:
-```bash
-$ helm repo add my_nginx https://alexeiemelin.github.io/nginx_helm/charts/
-$ helm install nginx my_nginx/my_nginx
-NAME: nginx
-LAST DEPLOYED: Wed Feb  8 15:00:55 2023
-NAMESPACE: default
-STATUS: deployed
-REVISION: 1
-TEST SUITE: None
-```
-
 ## Работа с kubernetes
 Установим кластер kubernetes с помощью kubespray.
 ```bash
@@ -249,6 +154,16 @@ $ vim inventory/mycluster/group_vars/k8s_cluster/k8s-cluster.yml
 #Прописываем в этот параметр:
 supplementary_addresses_in_ssl_keys: [10.0.0.1, 10.0.0.2, 10.0.0.3, 158.160.59.76]
 ```
+
+Добавим установку helm в наш кластер.
+
+```bash
+$ vim inventory/mycluster/group_vars/k8s_cluster/addons.yml
+#Прописываем:
+helm_enabled: true
+```
+
+
 Копируем приватный ключ ssh с хостовой машины на cp1 и раздаем права
 ```bash
 $ ~/kubespray$ chmod 0700 /home/ubuntu/.ssh/id_rsa
@@ -307,8 +222,6 @@ $ kubectl get po -o wide
 NAME                     READY   STATUS    RESTARTS   AGE   IP               NODE    NOMINATED NODE   READINESS GATES
 nginx-868dbbcfb9-ks74h   1/1     Running   0          19s   10.233.102.130   node1   <none>           <none>
 ```
-
-
 Добавим доступ к ноде с домашнего пк. Для этого создадим и заполним context
 ```bash
 $ vim ~/.kube/config 
@@ -344,7 +257,7 @@ node1   Ready    <none>          3d23h   v1.25.6
 node2   Ready    <none>          3d23h   v1.25.6
 ```
 
-Добавляем сервис для доступа из внешней сети и создаем pod:
+Добавляем сервис для доступа из внешней сети и создаем deployment:
 ```bash
 $ kubectl apply -f deployment.yml 
 deployment/frontend created
@@ -371,6 +284,19 @@ $ curl http://130.193.50.53:32180/
   <p>Alexei Emelin</p>
 </body>
 ```
+## Работа с Docker
+
+Создаем наш docker image из Dockerfile:
+```bash
+docker build -t alexeiemelin/nginx:v1 .
+```
+
+И загружаем его на hub.docker:
+```bash
+docker push alexeiemelin/nginx:v1
+```
+
+https://hub.docker.com/r/alexeiemelin/nginx
 
 ##Деплоим стек grafana/prometheus/node-exporeter:
 
@@ -404,6 +330,96 @@ kubectl --namespace monitoring port-forward svc/grafana 3000
 http://localhost:3000/
 ```
 
+## Работа с helm
+
+Устанавливаем helm на пк для того, чтобы сделать наш chart:
+```bash
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+```
+
+Cоздаем наш чарт:
+```bash
+helm create my_nginx
+```
+
+Удаляем лишние файлы, созданные автоматически и заменяем своими (values.yaml, Chart.yaml, deployment.yml):
+```bash
+rm -rf my_nginx/templates/*
+```
+
+Проверяем, что значения из файла values.yaml корректно подставляются: 
+```bash
+helm template my_nginx
+```
+
+Проверяем синтаксис:
+```bash
+helm lint my_nginx
+```
+
+Пакуем в архив наш chart:
+```bash
+helm package my_nginx -d charts
+Successfully packaged chart and saved it to: charts/my_nginx-0.1.2.tgz
+```
+
+Генерируем индексный файл чарта, 
+который содержит в себе перечень версий приложения, составленный на основе архива:
+```bash
+helm repo index charts
+```
+
+Создадим index.html файл, который будет лицевой страничкой нашего чарта:
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>my_site</title>
+</head>
+<body>
+  <h2>Welcome to my Helm repository</h2>
+  <p>Alexei Emelin</p>
+</body>
+</html>
+```
+
+Верифицируем наш репозиторий. Для этого изменим наше приложение и загрузим новую версию.
+
+Создаем наш docker image из Dockerfile:
+```bash
+docker build -t alexeiemelin/nginx:0.0.3 .
+```
+
+И загружаем его на hub.docker:
+```bash
+docker push alexeiemelin/nginx:0.0.3
+```
+
+Изменим значение версии в values.yaml и Chart.yaml
+
+Перезальем наш chart:
+```bash
+helm package my_nginx -d charts
+Successfully packaged chart and saved it to: charts/my_nginx-0.0.3.tgz
+```
+
+Добавляем на control node репозиторий helm и устанавливаем chart:
+```bash
+$ helm repo add my_nginx https://alexeiemelin.github.io/nginx_helm/charts/
+$ helm install nginx my_nginx/my_nginx
+NAME: nginx
+LAST DEPLOYED: Wed Feb  8 15:00:55 2023
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+```
+
+
+
 ## Работа с gitlab ci-cd
 В конфиге terraform у нас уже подготовлена вм для gitlab с образом от yandex.
 Настраиваем gitlab и gitlab runner по инструкции от yandex cloud:
@@ -414,3 +430,8 @@ https://cloud.yandex.ru/docs/tutorials/testing/ci-for-snapshots
 Он содержит pipeline, который при коммите в репозиторий запускает сборку образа приложения 
 и пушит его в docker hub
 
+При публикции новой версии нам останется изменить версию в файлах helm (values.yaml, Chart.yaml)
+Перезалить helm chart и обновить приложение в kubernetes:
+```bash
+helm package my_nginx -d charts
+helm repo index charts
