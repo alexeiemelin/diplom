@@ -369,10 +369,12 @@ helm repo index charts
 ```
 
 Загружаем наш chart в отдельный репозиторий, к которому подключим github pages: https://github.com/alexeiemelin/nginx_helm
+
 Важно указать ветку, где будем собирать приложение:
 <img src="Images/github pages.jpg">
 
 В итоге имеем такую страничку:)
+
 <img src="Images/github pages_2.jpg">
 
 Создаем аккаунт на https://artifacthub.io/
@@ -418,6 +420,8 @@ TEST SUITE: None
 В конфиге terraform у нас уже подготовлена вм для gitlab с образом от yandex.
 Настраиваем gitlab и gitlab runner по инструкции от yandex cloud:
 https://cloud.yandex.ru/docs/tutorials/testing/ci-for-snapshots
+
+Устанавливаем на этой машине helm и docker
 
 Создаем на gitlab репозиторий и загружаем туда наш Dockerfile.
 Создаем файл .gitlab-ci.yml
