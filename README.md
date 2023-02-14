@@ -329,7 +329,10 @@ kubectl --namespace monitoring port-forward svc/grafana 3000
 ```html
 http://localhost:3000/
 ```
-
+<img src="Images/grafana_1.png">
+<img src="Images/grafana_2.png">
+<img src="Images/grafana_3.png">
+<img src="Images/grafana_4.png">
 ## Работа с helm
 
 Устанавливаем helm на пк для того, чтобы сделать наш chart:
@@ -433,5 +436,11 @@ https://cloud.yandex.ru/docs/tutorials/testing/ci-for-snapshots
 При публикции новой версии нам останется изменить версию в файлах helm (values.yaml, Chart.yaml)
 Перезалить helm chart и обновить приложение в kubernetes:
 ```bash
+#В репо с нашим приложением
 helm package my_nginx -d charts
 helm repo index charts
+
+#В kubernetes
+helm repo update
+helm upgrade --install nginx my_nginx/my_nginx
+```
