@@ -414,3 +414,4 @@ https://cloud.yandex.ru/docs/tutorials/testing/ci-for-snapshots
 Он содержит pipeline, который при коммите в репозиторий запускает сборку образа приложения 
 и пушит его в docker hub
 
+s
