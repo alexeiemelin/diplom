@@ -6,16 +6,13 @@
 
 ```bash
 $ yc iam service-account create sa
-id: 
-folder_id: 
-created_at: 
-name: sa
+
 ```
 
 Даем ему права на редактирование (заменяем наш каталог):
 
 ```bash
-$ yc resource-manager folder add-access-binding b1g259gr1ck7ejh9jd55 --role editor --subject serviceAccount:aje2ac1v0gqi4mu633a3
+$ yc resource-manager folder add-access-binding b1g259gr1ck7ejh9jd55 --role editor --subject serviceAccount:
 done (1s)
 ```
 Генерируем access и secret key:
@@ -24,7 +21,7 @@ done (1s)
 $ yc iam access-key create --service-account-name sa
 ```
 
-Добавляем ключи key_id и secret в main.tf
+Добавляем ключи key_id и secret в provider.tf
 
 Создаем бакет:
 ```bash
@@ -54,7 +51,9 @@ user@user:~/PycharmProjects/diplom$ terraform workspace list
 Запуск сборки делаем с помощью команды:
 
 ```bash
-terraform apply
+#Смотрим предварительные изменения:
+$ terraform plan
+$ terraform apply
 ```
 ## Работа с kubernetes
 Установим кластер kubernetes с помощью kubespray.
@@ -285,7 +284,7 @@ https://hub.docker.com/r/alexeiemelin/nginx
 
 ##Деплоим стек grafana/prometheus/node-exporeter:
 
-Ставим через репозиторий или через helm
+Ставим через репозиторий на control node:
 
 ```bash
 #Через репозиторий
@@ -297,12 +296,6 @@ kubectl wait \
 	--all CustomResourceDefinition \
 	--namespace=monitoring
 kubectl apply -f manifests/
-```
-
-```bash
-#Через helm:
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm install kube-monitoring prometheus-community/kube-prometheus-stack
 ```
 
 На локальной машине запускаем проброс трафика для доступа к grafana:
@@ -318,6 +311,7 @@ http://localhost:3000/
 <img src="Images/grafana_2.png">
 <img src="Images/grafana_3.png">
 <img src="Images/grafana_4.png">
+
 ## Работа с helm
 
 Устанавливаем helm на пк для того, чтобы сделать наш chart:
@@ -374,6 +368,19 @@ helm repo index charts
 </html>
 ```
 
+Загружаем наш chart в отдельный репозиторий, к которому подключим github pages: https://github.com/alexeiemelin/nginx_helm
+Важно указать ветку, где будем собирать приложение:
+<img src="Images/github pages.jpg">
+
+В итоге имеем такую страничку:)
+<img src="Images/github pages_2.jpg">
+
+Создаем аккаунт на https://artifacthub.io/
+
+Добавляем наш chart:
+
+<img src="Images/artifactory_hlm.jpg">
+
 Верифицируем наш репозиторий. Для этого изменим наше приложение и загрузим новую версию.
 
 Создаем наш docker image из Dockerfile:
@@ -393,6 +400,7 @@ docker push alexeiemelin/nginx:0.0.3
 helm package my_nginx -d charts
 Successfully packaged chart and saved it to: charts/my_nginx-0.0.3.tgz
 ```
+<img src="Images/chart_repo.png">
 
 Добавляем на control node репозиторий helm и устанавливаем chart:
 ```bash
@@ -406,8 +414,6 @@ REVISION: 1
 TEST SUITE: None
 ```
 
-
-
 ## Работа с gitlab ci-cd
 В конфиге terraform у нас уже подготовлена вм для gitlab с образом от yandex.
 Настраиваем gitlab и gitlab runner по инструкции от yandex cloud:
@@ -417,6 +423,11 @@ https://cloud.yandex.ru/docs/tutorials/testing/ci-for-snapshots
 Создаем файл .gitlab-ci.yml
 Он содержит pipeline, который при коммите в репозиторий запускает сборку образа приложения 
 и пушит его в docker hub
+
+<img src="Images/gitlab.png">
+
+Переменные прописываем здесь:
+<img src="Images/gitlab_var.png">
 
 При публикции новой версии нам останется изменить версию в файлах helm (values.yaml, Chart.yaml)
 Перезалить helm chart и обновить приложение в kubernetes:
