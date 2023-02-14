@@ -6,9 +6,9 @@
 
 ```bash
 $ yc iam service-account create sa
-id: aje2ac1v0gqi4mu633a3
-folder_id: b1g259gr1ck7ejh9jd55
-created_at: "2023-01-18T20:13:49.223846439Z"
+id: 
+folder_id: 
+created_at: 
 name: sa
 ```
 
@@ -22,12 +22,6 @@ done (1s)
 
 ```bash
 $ yc iam access-key create --service-account-name sa
-access_key:
-  id: ajedu2vupk2f4sm8p5nl
-  service_account_id: aje2ac1v0gqi4mu633a3
-  created_at: "2023-01-18T20:21:57.764510857Z"
-  key_id: YCAJEzpfZSh39LMtx3ovgbdfM
-secret: YCN8lI_sZI8zmzo_Nyg4InTDUjXjlVx9QeP_zbJ0
 ```
 
 Добавляем ключи key_id и secret в main.tf
@@ -35,15 +29,6 @@ secret: YCN8lI_sZI8zmzo_Nyg4InTDUjXjlVx9QeP_zbJ0
 Создаем бакет:
 ```bash
 $ yc storage bucket create --name my-storage
-name: my-storage
-folder_id: b1g259gr1ck7ejh9jd55
-anonymous_access_flags:
-  read: false
-  list: false
-default_storage_class: STANDARD
-versioning: VERSIONING_DISABLED
-acl: {}
-created_at: "2023-01-18T20:26:55.771449Z"
 ```
 
 Инициализируем backend:
