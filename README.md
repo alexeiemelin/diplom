@@ -24,10 +24,10 @@ done (1s)
 $ yc iam access-key create --service-account-name sa
 access_key:
   id: ajedu2vupk2f4sm8p5nl
-  service_account_id: aje2ac1v0gqi4mu633a3
+  service_account_id: 
   created_at: "2023-01-18T20:21:57.764510857Z"
-  key_id: YCAJEzpfZSh39LMtx3ovgbdfM
-secret: YCN8lI_sZI8zmzo_Nyg4InTDUjXjlVx9QeP_zbJ0
+  key_id: 
+secret: 
 ```
 
 Добавляем ключи key_id и secret в main.tf
@@ -329,10 +329,7 @@ kubectl --namespace monitoring port-forward svc/grafana 3000
 ```html
 http://localhost:3000/
 ```
-<img src="Images/grafana_1.png">
-<img src="Images/grafana_2.png">
-<img src="Images/grafana_3.png">
-<img src="Images/grafana_4.png">
+
 ## Работа с helm
 
 Устанавливаем helm на пк для того, чтобы сделать наш chart:
@@ -436,11 +433,5 @@ https://cloud.yandex.ru/docs/tutorials/testing/ci-for-snapshots
 При публикции новой версии нам останется изменить версию в файлах helm (values.yaml, Chart.yaml)
 Перезалить helm chart и обновить приложение в kubernetes:
 ```bash
-#В репо с нашим приложением
 helm package my_nginx -d charts
 helm repo index charts
-
-#В kubernetes
-helm repo update
-helm upgrade --install nginx my_nginx/my_nginx
-```
