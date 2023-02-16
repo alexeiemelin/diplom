@@ -59,17 +59,18 @@ $ terraform apply
 Установим кластер kubernetes с помощью kubespray.
 ```bash
 $ yc compute instance list
-+----------------------+-------+---------------+---------+----------------+---------------+
-|          ID          | NAME  |    ZONE ID    | STATUS  |  EXTERNAL IP   |  INTERNAL IP  |
-+----------------------+-------+---------------+---------+----------------+---------------+
-| fhm3m1rf2b5iu4du5vpr | node2 | ru-central1-a | RUNNING | 158.160.51.173 | 192.168.10.14 |
-| fhm76hnqare7irr180hq | cp1   | ru-central1-a | RUNNING | 158.160.58.140 | 192.168.10.20 |
-| fhmvmf3bco9ucqu24j55 | node1 | ru-central1-a | RUNNING | 158.160.32.29  | 192.168.10.4  |
-+----------------------+-------+---------------+---------+----------------+---------------+
++----------------------+--------+---------------+---------+----------------+---------------+
+|          ID          |  NAME  |    ZONE ID    | STATUS  |  EXTERNAL IP   |  INTERNAL IP  |
++----------------------+--------+---------------+---------+----------------+---------------+
+| fhm2t0lgrbmpdm67psej | cp1    | ru-central1-a | RUNNING | 130.193.50.53  | 192.168.10.6  |
+| fhmm4adq7u4gqjvkl9j8 | gitlab | ru-central1-a | RUNNING | 158.160.57.207 | 192.168.10.33 |
+| fhmn0io6gtqcklee7tnp | node1  | ru-central1-a | RUNNING | 158.160.49.132 | 192.168.10.30 |
+| fhmr6mb1k83e47kq72sd | node2  | ru-central1-a | RUNNING | 158.160.40.66  | 192.168.10.35 |
++----------------------+--------+---------------+---------+----------------+---------------+
 ```
 Зайдем на control node, склонируем репозиторий kubespray и внесем свои параметры:
 ```bash
-$ ssh ubuntu@158.160.58.140
+$ ssh ubuntu@130.193.50.53
 $ git clone https://github.com/kubernetes-sigs/kubespray
 $ sudo apt-get update
 $ sudo apt install pip
@@ -83,10 +84,10 @@ $ sudo pip3 install -r requirements.txt
 $ cp -rfp inventory/sample inventory/mycluster
 
 # Обновление Ansible inventory с помощью билдера 
-declare -a IPS=(192.168.10.20 192.168.10.17 192.168.10.23)
+declare -a IPS=(192.168.10.6 192.168.10.30 192.168.10.35)
 CONFIG_FILE=inventory/mycluster/hosts.yaml python3 contrib/inventory_builder/inventory.py ${IPS[@]}
 
-# 192.168.10.20 192.168.10.17 192.168.10.23 - адреса моих серверов
+# 192.168.10.6 192.168.10.30 192.168.10.35 - адреса моих серверов
 ```
 
 Билдер подготовит файл `inventory/mycluster/hosts.yaml`. Там будут прописаны адреса серверов, которые указали.
@@ -97,19 +98,19 @@ $ cat ~/kubespray/inventory/mycluster/hosts.yaml
 all:
   hosts:
     cp1:
-      ansible_host: 192.168.10.23
-      ip: 192.168.10.23
-      access_ip: 192.168.10.23
+      ansible_host: 192.168.10.6
+      ip: 192.168.10.6
+      access_ip: 192.168.10.6
       ansible_user: ubuntu
     node1:
-      ansible_host: 192.168.10.17
-      ip: 192.168.10.17
-      access_ip: 192.168.10.17
+      ansible_host: 192.168.10.30
+      ip: 192.168.10.30
+      access_ip: 192.168.10.30
       ansible_user: ubuntu
     node2:
-      ansible_host: 192.168.10.20
-      ip: 192.168.10.20
-      access_ip: 192.168.10.20
+      ansible_host: 192.168.10.35
+      ip: 192.168.10.35
+      access_ip: 192.168.10.35
       ansible_user: ubuntu
   children:
     kube_control_plane:
@@ -129,14 +130,6 @@ all:
         kube_node:
     calico_rr:
       hosts: {}
-```
-Копируем адрес control node для настройки в дальнейшем доступа с домашнего пк:
-
-```bash
-$ vim inventory/mycluster/group_vars/k8s_cluster/k8s-cluster.yml
-
-#Прописываем в этот параметр:
-supplementary_addresses_in_ssl_keys: [10.0.0.1, 10.0.0.2, 10.0.0.3, 158.160.59.76]
 ```
 
 Добавим установку helm в наш кластер.
@@ -159,12 +152,22 @@ $ ~/kubespray$ chmod 0700 /home/ubuntu/.ssh/id_rsa
 ansible-playbook -i inventory/mycluster/hosts.yaml cluster.yml -b -v
 ```
 
+Копируем конфиг из папки по умолчанию:
 ```bash
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
+Копируем адрес control node для настройки доступа с удаленного пк и еще раз запускаем сборку:
+```bash
+$ vim inventory/mycluster/group_vars/k8s_cluster/k8s-cluster.yml
+
+#Прописываем в этот параметр:
+supplementary_addresses_in_ssl_keys: [158.160.59.76]
+
+ansible-playbook -i inventory/mycluster/hosts.yaml cluster.yml -b -v
+```
 ```bash
 $ kubectl version
 WARNING: This version information is deprecated and will be replaced with the output from kubectl version --short.  Use --output=yaml|json to get the full version.
@@ -172,40 +175,40 @@ Client Version: version.Info{Major:"1", Minor:"25", GitVersion:"v1.25.6", GitCom
 Kustomize Version: v4.5.7
 Server Version: version.Info{Major:"1", Minor:"25", GitVersion:"v1.25.6", GitCommit:"ff2c119726cc1f8926fb0585c74b25921e866a28", GitTreeState:"clean", BuildDate:"2023-01-18T19:15:26Z", GoVersion:"go1.19.5", Compiler:"gc", Platform:"linux/amd64"}
 
-$ kubectl get nodes
-NAME    STATUS   ROLES           AGE     VERSION
-cp1     Ready    control-plane   10m     v1.25.6
-node1   Ready    <none>          8m38s   v1.25.6
-node2   Ready    <none>          8m40s   v1.25.6
+$ kubectl get po,svc,deployment -o wide
+NAME                            READY   STATUS    RESTARTS   AGE   IP            NODE    NOMINATED NODE   READINESS GATES
+pod/frontend-68b6c85c69-lw99f   1/1     Running   0          23h   10.233.75.2   node2   <none>           <none>
+
+NAME                 TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE   SELECTOR
+service/kubernetes   ClusterIP   10.233.0.1     <none>        443/TCP        29h   <none>
+service/nodeport     NodePort    10.233.8.142   <none>        80:32180/TCP   23h   app=frontend
+
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                     SELECTOR
+deployment.apps/frontend   1/1     1            1           23h   nginx        alexeiemelin/nginx:1.0.0   app=frontend
 
 $ kubectl get pods --all-namespaces
-NAMESPACE     NAME                                       READY   STATUS    RESTARTS       AGE
-kube-system   calico-kube-controllers-75748cc9fd-84zc2   1/1     Running   0              7m59s
-kube-system   calico-node-p5blq                          1/1     Running   0              9m13s
-kube-system   calico-node-q2mr5                          1/1     Running   0              9m13s
-kube-system   calico-node-rg9ww                          1/1     Running   0              9m13s
-kube-system   coredns-588bb58b94-ddtgn                   1/1     Running   0              7m26s
-kube-system   coredns-588bb58b94-dl6ws                   1/1     Running   0              7m2s
-kube-system   dns-autoscaler-5b9959d7fc-mz9nt            1/1     Running   0              7m18s
-kube-system   kube-apiserver-cp1                         1/1     Running   1              11m
-kube-system   kube-controller-manager-cp1                1/1     Running   2 (5m7s ago)   11m
-kube-system   kube-proxy-4xtg2                           1/1     Running   0              10m
-kube-system   kube-proxy-hk2q7                           1/1     Running   0              10m
-kube-system   kube-proxy-klvbv                           1/1     Running   0              10m
-kube-system   kube-scheduler-cp1                         1/1     Running   2 (5m7s ago)   11m
-kube-system   nginx-proxy-node1                          1/1     Running   0              9m1s
-kube-system   nginx-proxy-node2                          1/1     Running   0              9m2s
-kube-system   nodelocaldns-jqxlq                         1/1     Running   0              7m17s
-kube-system   nodelocaldns-shlcc                         1/1     Running   0              7m17s
-kube-system   nodelocaldns-vxd6b                         1/1     Running   0              7m17s
-
-$ kubectl create deploy nginx --image=alexeiemelin/nginx:v1
-deployment.apps/nginx created
-
-$ kubectl get po -o wide
-NAME                     READY   STATUS    RESTARTS   AGE   IP               NODE    NOMINATED NODE   READINESS GATES
-nginx-868dbbcfb9-ks74h   1/1     Running   0          19s   10.233.102.130   node1   <none>           <none>
+NAMESPACE     NAME                                       READY   STATUS    RESTARTS   AGE
+default       frontend-68b6c85c69-lw99f                  1/1     Running   0          23h
+kube-system   calico-kube-controllers-7967fb4566-sm2k5   1/1     Running   0          29h
+kube-system   calico-node-6hqkr                          1/1     Running   0          29h
+kube-system   calico-node-hksqb                          1/1     Running   0          29h
+kube-system   calico-node-vj6pw                          1/1     Running   0          29h
+kube-system   coredns-68868dc95b-7nlxm                   1/1     Running   0          29h
+kube-system   coredns-68868dc95b-w5rs5                   1/1     Running   0          29h
+kube-system   dns-autoscaler-7ccd65764f-sjnrb            1/1     Running   0          29h
+kube-system   kube-apiserver-cp1                         1/1     Running   0          29h
+kube-system   kube-controller-manager-cp1                1/1     Running   1          29h
+kube-system   kube-proxy-brf7j                           1/1     Running   0          28h
+kube-system   kube-proxy-chrfd                           1/1     Running   0          28h
+kube-system   kube-proxy-v9cpv                           1/1     Running   0          28h
+kube-system   kube-scheduler-cp1                         1/1     Running   1          29h
+kube-system   nginx-proxy-node1                          1/1     Running   0          29h
+kube-system   nginx-proxy-node2                          1/1     Running   0          29h
+kube-system   nodelocaldns-5bbfv                         1/1     Running   0          29h
+kube-system   nodelocaldns-t7kfq                         1/1     Running   0          29h
+kube-system   nodelocaldns-x9t4g                         1/1     Running   0          29h
 ```
+
 Добавим доступ к ноде с домашнего пк. Для этого создадим и заполним context
 ```bash
 $ vim ~/.kube/config 
@@ -235,39 +238,53 @@ $ kubectl config use-context kubespray
 Switched to context "kubespray".
 
 $ kubectl get nodes
-NAME    STATUS   ROLES           AGE     VERSION
-cp1     Ready    control-plane   3d23h   v1.25.6
-node1   Ready    <none>          3d23h   v1.25.6
-node2   Ready    <none>          3d23h   v1.25.6
+NAME    STATUS   ROLES           AGE   VERSION
+cp1     Ready    control-plane   29h   v1.26.1
+node1   Ready    <none>          29h   v1.26.1
+node2   Ready    <none>          29h   v1.26.1
 ```
 
-Добавляем сервис для доступа из внешней сети и создаем deployment:
-```bash
-$ kubectl apply -f deployment.yml 
-deployment/frontend created
-service/nodeport created
+Пишем deployment.yml нашего будущего приложения:
 
-$ kubectl get po -o wide
-NAME       READY   STATUS    RESTARTS   AGE     IP               NODE    NOMINATED NODE   READINESS GATES
-frontend   1/1     Running   0          2m27s   10.233.102.136   node1   <none>           <none>
-```
-```bash
-#Проверяем доступность:
-$ curl http://130.193.50.53:32180/
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: frontend
+  name: frontend
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        name: nginx
+        imagePullPolicy: IfNotPresent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodeport
+  namespace: default
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      nodePort: 32180
+  selector:
+    app: frontend
+  type: NodePort
 ```
 
-```html
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>my_site</title>
-</head>
-<body>
-  <h2>Welcome to my site</h2>
-  <p>Alexei Emelin</p>
-</body>
-```
 ## Работа с Docker
 
 Создаем наш docker image из Dockerfile:
@@ -340,6 +357,10 @@ helm template my_nginx
 ```bash
 helm lint my_nginx
 ```
+```
+Далее действия в разделе chart нужны если бы мы загружали chart из удаленного репозитория, 
+но мы будем это делать из локального, поэтому они не обязательны.
+```
 
 Пакуем в архив наш chart:
 ```bash
@@ -348,7 +369,8 @@ Successfully packaged chart and saved it to: charts/my_nginx-0.1.2.tgz
 ```
 
 Генерируем индексный файл чарта, 
-который содержит в себе перечень версий приложения, составленный на основе архива:
+который содержит в себе перечень версий приложения, составленный на основе архива
+(пункт не обязателен, т.к. мы будем загружать чарт из локального репозитория):
 ```bash
 helm repo index charts
 ```
@@ -368,7 +390,8 @@ helm repo index charts
 </html>
 ```
 
-Загружаем наш chart в отдельный репозиторий, к которому подключим github pages: https://github.com/alexeiemelin/nginx_helm
+Загружаем наш chart в отдельный репозиторий, 
+к которому подключим github pages: https://github.com/alexeiemelin/nginx_helm
 
 Важно указать ветку, где будем собирать приложение:
 <img src="Images/github pages.jpg">
@@ -421,12 +444,19 @@ TEST SUITE: None
 Настраиваем gitlab и gitlab runner по инструкции от yandex cloud:
 https://cloud.yandex.ru/docs/tutorials/testing/ci-for-snapshots
 
-Устанавливаем на этой машине helm и docker
+Устанавливаем на этой машине helm и docker, а так же важно установить kubectl под пользователем
+gitlab-runner, т.к. именно под ним выполняются все команды в gitlab ci.
+Для этого логинимся под этим пользователем через root пользователя и выполняем установку согласно инструкции:
+
+```bash
+sudo -i -u gitlab-runner
+```
 
 Создаем на gitlab репозиторий и загружаем туда наш Dockerfile.
 Создаем файл .gitlab-ci.yml
-Он содержит pipeline, который при коммите в репозиторий запускает сборку образа приложения 
-и пушит его в docker hub
+Он содержит pipeline из двух stage. Stage build_docker при коммите в репозиторий запускает сборку 
+образа приложения и пушит его в docker hub с заданной версией. 
+Stage build helm производит установку обновленного приложения.
 
 <img src="Images/gitlab.png">
 
