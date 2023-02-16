@@ -246,7 +246,7 @@ node2   Ready    <none>          29h   v1.26.1
 
 Пишем deployment.yml нашего будущего приложения:
 
-```yml
+```bash
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -440,6 +440,7 @@ TEST SUITE: None
 ```
 
 ## Работа с gitlab ci-cd
+
 В конфиге terraform у нас уже подготовлена вм для gitlab с образом от yandex.
 Настраиваем gitlab и gitlab runner по инструкции от yandex cloud:
 https://cloud.yandex.ru/docs/tutorials/testing/ci-for-snapshots
