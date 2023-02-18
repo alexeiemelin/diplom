@@ -403,10 +403,6 @@ Helm deploy:
 
 <img src="Images/tag_commit.png">
 
-Чтобы раскрутить определенную версию приложения, мы должны указать нужный тэг в файле values.yaml:
-
-<img src="Images/values_tag.png">
-
-Или прописать его в пайплайне через --set
+Чтобы раскрутить определенную версию приложения, мы пропишем нужный tag в пайплайне через --set
 
 <img src="Images/set_tag_pipeline.png">
