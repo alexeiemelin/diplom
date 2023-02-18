@@ -356,87 +356,6 @@ helm template my_nginx
 ```bash
 helm lint my_nginx
 ```
-```
-Далее действия в разделе chart нужны если бы мы загружали chart из удаленного репозитория, 
-но мы будем это делать из локального, поэтому они не обязательны.
-```
-
-Пакуем в архив наш chart:
-```bash
-helm package my_nginx -d charts
-Successfully packaged chart and saved it to: charts/my_nginx-0.1.2.tgz
-```
-
-Генерируем индексный файл чарта, 
-который содержит в себе перечень версий приложения, составленный на основе архива
-(пункт не обязателен, т.к. мы будем загружать чарт из локального репозитория):
-```bash
-helm repo index charts
-```
-
-Создадим index.html файл, который будет лицевой страничкой нашего чарта:
-```html
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>my_site</title>
-</head>
-<body>
-  <h2>Welcome to my Helm repository</h2>
-  <p>Alexei Emelin</p>
-</body>
-</html>
-```
-
-Загружаем наш chart в отдельный репозиторий, 
-к которому подключим github pages: https://github.com/alexeiemelin/nginx_helm
-
-Важно указать ветку, где будем собирать приложение:
-<img src="Images/github pages.jpg">
-
-В итоге имеем такую страничку:)
-
-<img src="Images/github pages_2.jpg">
-
-Создаем аккаунт на https://artifacthub.io/
-
-Добавляем наш chart:
-
-<img src="Images/artifactory_hlm.jpg">
-
-Верифицируем наш репозиторий. Для этого изменим наше приложение и загрузим новую версию.
-
-Создаем наш docker image из Dockerfile:
-```bash
-docker build -t alexeiemelin/nginx:0.0.3 .
-```
-
-И загружаем его на hub.docker:
-```bash
-docker push alexeiemelin/nginx:0.0.3
-```
-
-Изменим значение версии в values.yaml и Chart.yaml
-
-Перезальем наш chart:
-```bash
-helm package my_nginx -d charts
-Successfully packaged chart and saved it to: charts/my_nginx-0.0.3.tgz
-```
-<img src="Images/chart_repo.png">
-
-Добавляем на control node репозиторий helm и устанавливаем chart:
-```bash
-$ helm repo add my_nginx https://alexeiemelin.github.io/nginx_helm/charts/
-$ helm install nginx my_nginx/my_nginx
-NAME: nginx
-LAST DEPLOYED: Wed Feb  8 15:00:55 2023
-NAMESPACE: default
-STATUS: deployed
-REVISION: 1
-TEST SUITE: None
-```
 
 ## Работа с gitlab ci-cd
 
@@ -479,3 +398,15 @@ Helm deploy:
 Результат - наш сайт:
 
 <img src="Images/my_site.png">
+
+Тэг для docker image берется из коммита через переменную Gitlab CI:
+
+<img src="Images/tag_commit.png">
+
+Чтобы раскрутить определенную версию приложения, мы должны указать нужный тэг в файле values.yaml:
+
+<img src="Images/values_tag.png">
+
+Или прописать его в пайплайне через --set
+
+<img src="Images/set_tag_pipeline.png">
